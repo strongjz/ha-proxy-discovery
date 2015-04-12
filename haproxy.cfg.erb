@@ -1,0 +1,27 @@
+  mode  http
+  option httplog
+  option dontlognull
+  timeout connect  5000
+  timeout client  50000
+  timeout server  1800s
+  stats enable
+    stats auth admin:admin
+    stats uri /haproxyStats
+
+frontend http-in
+
+    <%- backend_servers['apps'][0]['adv_http_ports'].split(',').each do |key| -%>
+    bind *:<%= key  %>
+    <%- end -%>
+
+    <%- if backend_servers['apps'][0]['adv_redirect'] == "true" -%>
+    # block to redirect to https, if specified
+    redirect scheme https code 301 if !{ ssl_fc }
+    <%- else -%>
+
+    # figure out which one to use
+      <%- backend_servers['apps'].each do |key|-%>
+    use_backend <%= key['appid'] -%>_cluster
+      <%- end -%>
+    <%- end -%>
+
