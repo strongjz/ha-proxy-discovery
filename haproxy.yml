@@ -1,0 +1,12 @@
+dir: /apps/ha-proxy-discovery 
+environment: production
+address: 0.0.0.0
+port: 7070
+timeout: 30
+log: thin.log
+pid: /var/run/thin.pid
+max_conns: 1024
+max_persistent_conns: 100
+wait: 30
+daemonize: true
+ssl: true

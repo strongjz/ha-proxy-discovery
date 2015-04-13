@@ -22,14 +22,17 @@ def unregister
 end
 
 
+get '/status' do
+	status 200
+end
 post '/reload' do
-  generate_configs(zookeeper_host, application_group, application, haproxy_config_file)
+  generate_configs()
 end
 
 post '/events' do
   event = JSON.parse(request.body.read)
   if !event['eventType'].nil? && event['eventType'] == 'deployment_step_success'
-    generate_configs(zookeeper_host, application_group, application, haproxy_config_file)
+    generate_configs()
   end
 end
 
@@ -40,6 +43,4 @@ end
 delete '/unregister' do
 	unregister()
 end
-
-
 
