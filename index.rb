@@ -20,6 +20,8 @@ $lb_host = @config['lb_host']
 
 def generate_configs
 
+	puts "[DEBUG] Generating Config for HAPROXY"
+	return true
 #get all the apps
 
 #for each app
@@ -59,13 +61,14 @@ def register(marathon)
         uri = URI.parse("http://#{marathon}:8080/v2/eventSubscriptions?callbackUrl=http://#{$lb_host}:7070/events")
         http = Net::HTTP.new(uri.host, uri.port)
         request = Net::HTTP::Post.new(uri.request_uri)
-        response = http.request(request)
-
+        request["Content-Type"] = "application/json"
+				response = http.request(request)
+				
         if response.code.to_i == 200
           puts "[INFO][Register] Successfully registered callback for #{$lb_host} with #{marathon}"
 					status 200
         else
-          puts "[ERROR][Register] failed to register callback for #{$lb_host} with #{marathon}"
+          puts "[ERROR][Register] failed to register callback for #{$lb_host} with #{marathon} #{response.code} #{response.message}"
 					status 500
         end
       else
@@ -73,7 +76,7 @@ def register(marathon)
 				status 304
       end
     else
-      puts "[ERROR][Register] Getting callbacks from #{marathon}"
+      puts "[ERROR][Register] Getting callbacks from #{marathon} #{response.code} #{response.message}"
 			status 500
     end
   rescue Exception => e 
@@ -87,6 +90,7 @@ def unregister (marathon)
     uri = URI.parse("http://#{marathon}:8080/v2/eventSubscriptions?callbackUrl=http://#{$lb_host}:7070/events")
     http = Net::HTTP.new(uri.host, uri.port)
     request = Net::HTTP::Delete.new(uri.request_uri)
+    request["Content-Type"] = "application/json"
     response = http.request(request)
 
     if response.code.to_i == 200
@@ -110,9 +114,19 @@ post '/reload' do
 end
 
 post '/events' do
-  event = JSON.parse(request.body.read)
-  if !event['eventType'].nil? && event['eventType'] == 'deployment_step_success'
-    generate_configs()
+	
+	puts "[INFO] Events api endpoint called"
+	
+	event = JSON.parse(request.body.read)
+	
+	puts "[DEBUG] #{event}"
+
+	if !event['eventType'].nil? && event['eventType'] == 'deployment_step_success'
+    if generate_configs()
+			status 200
+		else
+			status 500 
+		end
   end
 end
 
