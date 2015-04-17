@@ -1,18 +1,25 @@
-  mode  http
+global
+  log /dev/log  local0
+  log /dev/log  local1 notice
+  chroot /var/lib/haproxy
+  user haproxy
+  group haproxy
+  daemon
+
+defaults	
+	mode  http
   option httplog
   option dontlognull
   timeout connect  5000
   timeout client  50000
   timeout server  1800s
   stats enable
-    stats auth admin:admin
-    stats uri /haproxyStats
+  stats auth admin:admin
+  stats uri /haproxyStats
 
 frontend http-in
 
-    <%- backend_servers['apps'][0]['adv_http_ports'].split(',').each do |key| -%>
-    bind *:<%= key  %>
-    <%- end -%>
+	bind *:80
 
     <%- if backend_servers['apps'][0]['adv_redirect'] == "true" -%>
     # block to redirect to https, if specified
@@ -24,4 +31,6 @@ frontend http-in
     use_backend <%= key['appid'] -%>_cluster
       <%- end -%>
     <%- end -%>
+
+backend <%= 
 

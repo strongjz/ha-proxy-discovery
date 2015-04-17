@@ -16,19 +16,54 @@ require '../hbc-class/honeybadger'
 @riak_port = @config['riak_port']
 $lb_host = @config['lb_host']
 @haproxy_config_file = '/etc/haproxy/haproxy.cfg'
-
+@hbc_api_key = @config['api_key']
 
 def generate_configs
 
 	puts "[DEBUG] Generating Config for HAPROXY"
-	return true
-#get all the apps
 
-#for each app
-	#get all the marathon data about that app
-	
-	#create the backend app
+	#get all the apps
+	uri = URI.parse("https://honeybadgercloud.io/hbc/api/v1/applications")
+  http = Net::HTTP.new(uri.host, uri.port)
+  request = Net::HTTP::Get.new(uri.request_uri)
+  request['Content-Type'] = 'application/json'
+  request['Accept'] = 'application/json'
+	request['X-Api-Key'] = @hbc_api_key
+  response = http.request(request)
 
+  if response.code.to_i == 200
+		puts "[INFO][Generate-configs]  Retrived all applications"
+		apps = JSON.parse(response.body)
+		
+		config = File.open("./haproxy.cfg.erb", 'r').read
+    template = ERB.new(config, nil, '-').result binding
+    new_hash = Digest::MD5.hexdigest(template)
+		
+		begin
+    	existing_hash = Digest::MD5.hexdigest(File.read(i@haproxy_config_file))
+    rescue => e
+    	existing_hash = nil
+    end
+
+      # drop config and reload
+     if existing_hash != new_hash
+     	File.write(@haproxy_config_file, template)
+     	reload = `/etc/init.d/haproxy reload`
+      
+			if $?.existstatus != 0
+				puts "[ERROR] Reloading HAproxy config Exit code #{$?} #{reload}"
+				status 500
+			else
+				puts "[INFO] Successfully reloaded HAproxy config"
+				status 201
+			end
+     else
+     	puts "[INFO][Generate-config] Configuration is the same, not reloading."
+			status 304
+		end
+		puts "[ERROR][Generate-configs] Retriving all applicaitons from HBC #{response.code} #{response.message}"
+		status 500
+	end
 
 end
 
