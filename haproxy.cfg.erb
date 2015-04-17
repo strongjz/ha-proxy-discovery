@@ -18,19 +18,22 @@ defaults
   stats uri /haproxyStats
 
 frontend http-in
-
 	bind *:80
 
-    <%- if backend_servers['apps'][0]['adv_redirect'] == "true" -%>
-    # block to redirect to https, if specified
-    redirect scheme https code 301 if !{ ssl_fc }
-    <%- else -%>
+	#Define the hosts
+<% applications.each do |k,v|  %>
+	acl <%= k %> hdr_end(host) -i <%= v['domain']  %>
+<% end %>
 
-    # figure out which one to use
-      <%- backend_servers['apps'].each do |key|-%>
-    use_backend <%= key['appid'] -%>_cluster
-      <%- end -%>
-    <%- end -%>
+	#figure out which one to use
+<% applications.each do |k,v|  %>
+	use_backend <%= k %> if <%= k %>
+<% end %>
 
-backend <%= 
-
+<% applications.each do |k,v|  %>
+backend <%= k %>
+	balance roundrobin
+	<% v["containers"].each do |c| %>
+		server Node1 <%=c%> cookie A check 
+	<% end %>
+<% end %>
