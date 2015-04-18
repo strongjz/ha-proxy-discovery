@@ -22,7 +22,7 @@ frontend http-in
 
 	#Define the hosts
 <% applications.each do |k,v|  %>
-	acl <%= k %> hdr_end(host) -i <%= v['domain']  %>
+	acl <%= k %> hdr_end(host) -i <%= v['stuff']  %>
 <% end %>
 
 	#figure out which one to use
