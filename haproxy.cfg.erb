@@ -34,6 +34,6 @@ frontend http-in
 backend <%= k %>
 	balance roundrobin
 	<% v["containers"].each do |c| %>
-		server Node1 <%=c%> cookie A check 
+	server Node1 <%=c%> cookie A check 
 	<% end %>
 <% end %>
