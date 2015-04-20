@@ -16,6 +16,10 @@ defaults
   stats enable
   stats auth admin:admin
   stats uri /haproxyStats
+	cookie SRVNAME insert
+	option httpclose
+	option forwardfor
+	#http-request add-header X-FrontEnd-IP %[dst]	
 
 frontend http-in
 	bind *:80
@@ -33,7 +37,10 @@ frontend http-in
 <% applications.each do |k,v|  %>
 backend <%= k %>
 	balance roundrobin
-	<% v["containers"].each do |c| %>
-	server Node1 <%=c%> cookie A check 
+	<%alpha = ('a'..'z').to_a %>
+	<%count = 0%>
+		<% v['containers'].each do |c| %>
+			server Node1 <%=c%> cookie <%=alpha[count]%> check 
+			<%count+=1%>
 	<% end %>
 <% end %>

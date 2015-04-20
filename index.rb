@@ -4,6 +4,7 @@ require 'net/https'
 require 'erb'
 require 'json'
 require 'digest/md5'
+require 'aws-sdk'
 $LOAD_PATH.unshift File.dirname(__FILE__)
 require '../hbc-class/honeybadger'
 
@@ -17,6 +18,9 @@ $riak_port = @config['riak_port']
 $lb_host = @config['lb_host']
 $haproxy_config_file = '/etc/haproxy/haproxy.cfg'
 $key = @config['hbc_api_key']
+$access_key = @config['access_key']
+$secret = @config['secret_key']
+
 
 def generate_configs
 	puts "[DEBUG][Generating-configs]  Generating Config for HAPROXY"
